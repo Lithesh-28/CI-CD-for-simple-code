@@ -43,19 +43,21 @@ jobs:
         run: |
           docker push ${{ secrets.DOCKER_USERNAME }}/docker-demo:latest
 
-      # 7️⃣ Deploy to Minikube with rolling update & rollback
+            # 7️⃣ Deploy to Minikube with rolling update & rollback
       - name: Deploy to Minikube
+        shell: pwsh
         run: |
           Write-Host "Updating deployment image..."
           kubectl set image deployment/docker-demo-deployment docker-demo="${{ secrets.DOCKER_USERNAME }}/docker-demo:latest"
           Write-Host "Applying service..."
           kubectl apply -f k8s/docker-demo-service.yaml
           Write-Host "Waiting for rollout to finish..."
-          if ! kubectl rollout status deployment/docker-demo-deployment --timeout=60s; then
-            Write-Host "❌ Rollout failed. Rolling back..."
-            kubectl rollout undo deployment/docker-demo-deployment
-            exit 1
-          fi
+          kubectl rollout status deployment/docker-demo-deployment --timeout=60s
+          if ($LASTEXITCODE -ne 0) {
+              Write-Host "❌ Rollout failed. Rolling back..."
+              kubectl rollout undo deployment/docker-demo-deployment
+              exit 1
+          }
 
       # 8️⃣ Print Minikube service URL
       - name: Get Minikube Service URL
