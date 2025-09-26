@@ -43,9 +43,9 @@ jobs:
         run: |
           docker push ${{ secrets.DOCKER_USERNAME }}/docker-demo:latest
 
-            # 7️⃣ Deploy to Minikube with rolling update & rollback
+      # 7️⃣ Deploy to Minikube with rolling update &rollback
       - name: Deploy to Minikube
-        shell: pwsh
+        shell: powershell
         run: |
           Write-Host "Updating deployment image..."
           kubectl set image deployment/docker-demo-deployment docker-demo="${{ secrets.DOCKER_USERNAME }}/docker-demo:latest"
@@ -58,6 +58,7 @@ jobs:
               kubectl rollout undo deployment/docker-demo-deployment
               exit 1
           }
+
 
       # 8️⃣ Print Minikube service URL
       - name: Get Minikube Service URL
