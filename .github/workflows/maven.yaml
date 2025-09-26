@@ -26,7 +26,7 @@ jobs:
       - name: Build with Maven
         run: mvn clean package -DskipTests
 
-      # 4️⃣ Log in to Docker Hub
+      # 4️⃣ Log in to Docker Hub (non-interactive)
       - name: Log in to Docker Hub
         uses: docker/login-action@v2
         with:
@@ -38,26 +38,28 @@ jobs:
         run: |
           docker build -t ${{ secrets.DOCKER_USERNAME }}/docker-demo:latest .
 
-      # 6️⃣ Push Docker image to Docker Hub
+      # 6️⃣ Push Docker image
       - name: Push Docker image
         run: |
           docker push ${{ secrets.DOCKER_USERNAME }}/docker-demo:latest
 
-      # 7️⃣ Deploy to Minikube
+      # 7️⃣ Deploy to Minikube with rolling update & rollback
       - name: Deploy to Minikube
         run: |
-          Write-Host "Applying Deployment and Service..."
-          kubectl apply -f k8s/docker-demo-deployment.yaml
-          kubectl apply -f k8s/docker-demo-service.yaml
-
           Write-Host "Updating deployment image..."
-          kubectl set image deployment/docker-demo-deployment docker-demo=${{ secrets.DOCKER_USERNAME }}/docker-demo:latest
-
+          kubectl set image deployment/docker-demo-deployment docker-demo="${{ secrets.DOCKER_USERNAME }}/docker-demo:latest"
+          Write-Host "Applying service..."
+          kubectl apply -f k8s/docker-demo-service.yaml
           Write-Host "Waiting for rollout to finish..."
-          kubectl rollout status deployment/docker-demo-deployment
+          if ! kubectl rollout status deployment/docker-demo-deployment --timeout=60s; then
+            Write-Host "❌ Rollout failed. Rolling back..."
+            kubectl rollout undo deployment/docker-demo-deployment
+            exit 1
+          fi
 
-      # 8️⃣ Get Minikube Service URL
+      # 8️⃣ Print Minikube service URL
       - name: Get Minikube Service URL
         run: |
-          kubectl get svc docker-demo-service
-          Write-Host "👉 Run 'minikube tunnel' in another terminal to access the LoadBalancer service."
+          $NODE_PORT = kubectl get service docker-demo-service -o jsonpath="{.spec.ports[0].nodePort}"
+          $MINIKUBE_IP = minikube ip
+          Write-Host "Your application is running at: http://$MINIKUBE_IP`:$NODE_PORT/greet"
