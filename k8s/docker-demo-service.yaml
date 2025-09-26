@@ -5,8 +5,7 @@ metadata:
 spec:
   selector:
     app: docker-demo
-  type: NodePort   # expose via NodePort
+  type: LoadBalancer   # change NodePort -> LoadBalancer
   ports:
-    - port: 8080
-      targetPort: 8080
-      nodePort: 30007
+    - port: 8080       # Service port
+      targetPort: 8080 # Container port
