@@ -1,13 +1,11 @@
-name: CI/CD Spring Boot Docker
+name: CI/CD Spring Boot Docker + Kubernetes
 
 on:
   push:
     branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
 
 jobs:
-  build-and-docker:
+  build-docker-deploy:
     runs-on: ubuntu-latest
 
     steps:
@@ -23,7 +21,7 @@ jobs:
           distribution: 'temurin'
           cache: maven
 
-      # 3️ Build Spring Boot project with Maven
+      # 3️ Build a Spring Boot project
       - name: Build with Maven
         run: mvn clean package -DskipTests
 
@@ -37,9 +35,27 @@ jobs:
       # 5️ Build Docker image
       - name: Build Docker image
         run: |
-          docker build -t ${{ secrets.DOCKER_USERNAME }}/springboot-app:latest .
+          docker build -t ${{ secrets.DOCKER_USERNAME }}/docker-demo:v1 .
 
-      # 6️ Push Docker image to Docker
+      # 6️ Push Docker image to Docker Hub
       - name: Push Docker image
         run: |
-          docker push ${{ secrets.DOCKER_USERNAME }}/springboot-app:latest
+          docker push ${{ secrets.DOCKER_USERNAME }}/docker-demo:v1
+
+      # 7️ Set up kubectl
+      - name: Set up kubectl
+        uses: azure/setup-kubectl@v3
+        with:
+          version: 'v1.34.0'
+
+      # 8️ Configure kubeconfig
+      - name: Configure kubeconfig
+        run: |
+          echo "${{ secrets.KUBECONFIG_CONTENT }}" > kubeconfig
+          export KUBECONFIG=$PWD/kubeconfig
+
+      # 9️ Apply Kubernetes manifests
+      - name: Deploy to Kubernetes
+        run: |
+          kubectl apply -f k8s/docker-demo-deployment.yaml
+          kubectl apply -f k8s/docker-demo-service.yaml
