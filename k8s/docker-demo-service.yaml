@@ -5,7 +5,7 @@ metadata:
 spec:
   selector:
     app: docker-demo
-  type: LoadBalancer   # change NodePort -> LoadBalancer
+  type: LoadBalancer   # ✅ works with minikube tunnel
   ports:
     - port: 8080       # Service port
       targetPort: 8080 # Container port

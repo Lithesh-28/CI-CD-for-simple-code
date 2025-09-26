@@ -3,7 +3,7 @@ kind: Deployment
 metadata:
   name: docker-demo-deployment
 spec:
-  replicas: 2  # start with 2 pods
+  replicas: 1
   selector:
     matchLabels:
       app: docker-demo
@@ -19,16 +19,16 @@ spec:
     spec:
       containers:
         - name: docker-demo
-          image: lithesh28/docker-demo:v1
+          image: lithesh28/docker-demo:latest   # ✅ matches workflow push
           ports:
             - containerPort: 8080
-          readinessProbe:      # ensures traffic only goes to ready pods
+          readinessProbe:
             httpGet:
               path: /greet
               port: 8080
             initialDelaySeconds: 5
             periodSeconds: 5
-          livenessProbe:       # restarts pod if container crashes
+          livenessProbe:
             httpGet:
               path: /greet
               port: 8080
