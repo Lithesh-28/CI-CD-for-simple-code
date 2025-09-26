@@ -1,4 +1,4 @@
-name: CI/CD Spring Boot Docker + Minikube
+name: CI/CD Spring Boot Docker + Minikube (Windows)
 
 on:
   push:
@@ -25,7 +25,6 @@ jobs:
       # 3️⃣ Build Spring Boot project
       - name: Build with Maven
         run: mvn clean package -DskipTests
-        shell: bash
 
       # 4️⃣ Log in to Docker Hub
       - name: Log in to Docker Hub
@@ -37,27 +36,24 @@ jobs:
       # 5️⃣ Build Docker image with commit SHA tag
       - name: Build Docker image
         run: |
-          IMAGE_TAG=${GITHUB_SHA::7}
-          docker build -t ${{ secrets.DOCKER_USERNAME }}/docker-demo:latest \
-                       -t ${{ secrets.DOCKER_USERNAME }}/docker-demo:$IMAGE_TAG .
-        shell: bash
+          $IMAGE_TAG = $env:GITHUB_SHA.Substring(0,7)
+          docker build -t $env:DOCKER_USERNAME/docker-demo:latest `
+                       -t $env:DOCKER_USERNAME/docker-demo:$IMAGE_TAG .
 
       # 6️⃣ Push Docker images to Docker Hub
       - name: Push Docker image
         run: |
-          IMAGE_TAG=${GITHUB_SHA::7}
-          docker push ${{ secrets.DOCKER_USERNAME }}/docker-demo:latest
-          docker push ${{ secrets.DOCKER_USERNAME }}/docker-demo:$IMAGE_TAG
-        shell: bash
+          $IMAGE_TAG = $env:GITHUB_SHA.Substring(0,7)
+          docker push $env:DOCKER_USERNAME/docker-demo:latest
+          docker push $env:DOCKER_USERNAME/docker-demo:$IMAGE_TAG
 
       # 7️⃣ Deploy to Minikube
       - name: Deploy to Minikube
         run: |
-          IMAGE_TAG=${GITHUB_SHA::7}
-          echo "Updating deployment image..."
-          kubectl set image deployment/docker-demo-deployment docker-demo=${{ secrets.DOCKER_USERNAME }}/docker-demo:$IMAGE_TAG
-          echo "Applying service..."
+          $IMAGE_TAG = $env:GITHUB_SHA.Substring(0,7)
+          Write-Host "Updating deployment image..."
+          kubectl set image deployment/docker-demo-deployment docker-demo=$env:DOCKER_USERNAME/docker-demo:$IMAGE_TAG
+          Write-Host "Applying service..."
           kubectl apply -f k8s/docker-demo-service.yaml
-          echo "Waiting for rollout to finish..."
+          Write-Host "Waiting for rollout to finish..."
           kubectl rollout status deployment/docker-demo-deployment
-        shell: bash
