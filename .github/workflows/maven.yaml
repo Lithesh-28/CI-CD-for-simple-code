@@ -47,7 +47,7 @@ jobs:
           docker push $env:DOCKER_USERNAME/docker-demo:latest
           docker push $env:DOCKER_USERNAME/docker-demo:$IMAGE_TAG
 
-      # 7️⃣ Deploy to Minikube
+      # 7️⃣ Deploy Minikube
       - name: Deploy to Minikube
         run: |
           $IMAGE_TAG = $env:GITHUB_SHA.Substring(0,7)
