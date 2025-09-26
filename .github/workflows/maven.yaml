@@ -39,7 +39,7 @@ jobs:
         run: |
           docker build -t ${{ secrets.DOCKER_USERNAME }}/springboot-app:latest .
 
-      # 6️ Push Docker image to Docker Hub
+      # 6️ Push Docker image to Docker
       - name: Push Docker image
         run: |
           docker push ${{ secrets.DOCKER_USERNAME }}/springboot-app:latest
